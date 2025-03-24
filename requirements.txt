@@ -1,0 +1,2 @@
+onnxruntime==1.21.0
+pyannote.audio==3.3.2
