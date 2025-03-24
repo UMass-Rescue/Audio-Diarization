@@ -1,2 +1,5 @@
 onnxruntime==1.21.0
 pyannote.audio==3.3.2
+git+https://github.com/openai/whisper.git 
+ffmpeg-python
+numpy==2.1
