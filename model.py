@@ -1,20 +1,33 @@
+import whisper
+import numpy as np
 from pyannote.audio import Pipeline
 from pyannote.core import Segment
 from pyannote.audio import Audio
+from utils import diarize_text
 
-# Load the pre-trained speaker diarization pipeline
+# Load the pre-trained speaker diarization pipeline and whisper model
 pipeline = Pipeline.from_pretrained("pyannote/speaker-diarization-3.0")
+asr_model = whisper.load_model("medium.en")
 
 # Path to your audio file
-audio_file = "input\audio.wav"
+audio_file = "input/TOEFL.mp3"
 
 # Perform diarization on the whole file
 print("Performing diarization on the whole file...")
 diarization = pipeline(audio_file)
+asr_result = asr_model.transcribe(audio_file)
 
-# Print the diarization output
-for turn, _, speaker in diarization.itertracks(yield_label=True):
-    print(f"Speaker {speaker} speaks from {turn.start:.1f}s to {turn.end:.1f}s")
+# # Print the diarization output
+# for turn, _, speaker in diarization.itertracks(yield_label=True):
+#     print(f"Speaker {speaker} speaks from {turn.start:.1f}s to {turn.end:.1f}s")
+
+#Final result
+print("\n\nFINAL RESULT---------")
+final_result = diarize_text(asr_result, diarization)
+
+for seg, spk, sent in final_result:
+    line = f'{seg.start:.2f} {seg.end:.2f} {spk} {sent}'
+    print(line)
 
 # Perform diarization on an excerpt (e.g., from 1.0s to 2.0s)
 print("\nPerforming diarization on an excerpt...")
