@@ -1,5 +1,4 @@
 import whisper
-import soundfile as sf
 import numpy as np
 from pyannote.audio import Pipeline
 from pyannote.core import Segment
@@ -11,7 +10,7 @@ pipeline = Pipeline.from_pretrained("pyannote/speaker-diarization-3.0")
 asr_model = whisper.load_model("medium.en")
 
 # Path to your audio file
-audio_file = "input/audio.wav"
+audio_file = "input/TOEFL.mp3"
 
 # Perform diarization on the whole file
 print("Performing diarization on the whole file...")
