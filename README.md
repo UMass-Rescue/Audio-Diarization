@@ -9,7 +9,7 @@ This process aids child rescue efforts by distinguishing victim and abuser voice
 1. **Clone the Repository**:
 
    ```bash
-   git clone [https://github.com/UMass-Rescue/Audio-Diarization.git](https://github.com/UMass-Rescue/Audio-Diarization.git)
+   git clone https://github.com/UMass-Rescue/Audio-Diarization.git 
    cd Audio-Diarization
    ```
 
