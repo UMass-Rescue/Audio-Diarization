@@ -40,11 +40,13 @@ This process aids child rescue efforts by distinguishing victim and abuser voice
 5. **Download and run RescueBox Desktop from the following link: [Rescue Box Desktop](https://github.com/UMass-Rescue/RescueBox-Desktop/releases)**
 
    Open the RescueBox Desktop application and register the model
+   
    <img width="495" alt="diarization_register" src="https://github.com/user-attachments/assets/b223ff7b-e941-44d1-a6e8-7c95a46487a3" />
 
    Run the model
    
    Set the Input and Output directory.
+   
    <img width="749" alt="diarization_directory" src="https://github.com/user-attachments/assets/5cbb8304-59de-49b7-9fc6-78eb7a5e7e16" />
 
 
@@ -52,5 +54,5 @@ This process aids child rescue efforts by distinguishing victim and abuser voice
    
    Results will be displayed
   
-  <img width="735" alt="diarization_result" src="https://github.com/user-attachments/assets/566446ca-49e6-41e6-9889-96140476bb6f" />
+   <img width="735" alt="diarization_result" src="https://github.com/user-attachments/assets/566446ca-49e6-41e6-9889-96140476bb6f" />
 
