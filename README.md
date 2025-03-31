@@ -14,6 +14,20 @@ This process aids child rescue efforts by distinguishing victim and abuser voice
    ```
 
 2. **Install Dependencies:**
+
+   For the best results create a virtaul environment. You can use any method to create a virtual environment!
+
+   One of the ways to create a virtual environment is listed below
+
+   ```bash
+   python -m venv <virtual_env_name>
+   ```
+
+   Activate the virtual environment
+   ```bash
+   source <virtual_env_name>/bin/activate 
+   ```
+
    Install the required Python packages using the following command:
 
    ```bash
@@ -25,7 +39,7 @@ This process aids child rescue efforts by distinguishing victim and abuser voice
    ```bash
    huggingface-cli login
    ```
-   You will be promoted to enter the access token which you can find: https://huggingface.co/settings/tokens
+   You will be prompted to enter the access token which you can find: https://huggingface.co/settings/tokens
    
    <img width="937" alt="diarization_accesstoken" src="https://github.com/user-attachments/assets/5e766cd7-45ef-4b2b-8d80-cc608d86e77c" />
 
@@ -56,3 +70,33 @@ This process aids child rescue efforts by distinguishing victim and abuser voice
   
    <img width="735" alt="diarization_result" src="https://github.com/user-attachments/assets/566446ca-49e6-41e6-9889-96140476bb6f" />
 
+## Diarization with Transcription
+
+The transcription output is not yet integrated with RescueBox. To see the diarized audio transcription we can run the model.py file. The output will be displayed in the terminal!
+
+First make sure ffmpeg is installed on your system, if you don't already have it
+
+for MacOS follow the below steps
+
+if you already have homebrew you can use the below command. If not you can follow the (documentation)[https://docs.brew.sh/Installation].
+
+```bash
+brew install ffmpeg
+```
+
+for Windows follow the below steps
+
+Use this (link to install the ffmpeg executable)[https://www.ffmpeg.org/download.html#build-windows], You can use the windows build from gyan.dev
+
+Follow the installation instructions mentioned in the installer
+
+Add ffmpeg to the environment variables to make to accessible globally
+
+
+Once you have ffmpeg installed on your system, make sure you open a new terminal for the changes to be reflected!
+
+Now you can simpley run the model.py file using the following command
+
+```bash
+   python model.py
+```   
