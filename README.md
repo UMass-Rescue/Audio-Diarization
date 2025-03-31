@@ -81,6 +81,8 @@ You will be prompted to enter the access token which you can find: https://huggi
 <img  width="937"  alt="diarization_accesstoken"  src="https://github.com/user-attachments/assets/5e766cd7-45ef-4b2b-8d80-cc608d86e77c"  />
 
   
+(Incase there are issues with the token, you can contact us and one of us will provide it to you!)
+
 
 4.  **Running the Flask-ML Server**
 
