@@ -1,6 +1,6 @@
 from typing import TypedDict, Dict, List
 from pathlib import Path
-from flask_ml.flask_ml_server import MLServer, load_file_as_string
+from flask_ml.flask_ml_server import MLServer
 from flask_ml.flask_ml_server.models import (
     DirectoryInput,
     FileResponse,
@@ -10,115 +10,91 @@ from flask_ml.flask_ml_server.models import (
     TaskSchema,
 )
 from pyannote.audio import Pipeline
-from pyannote.core import Segment
-from pyannote.audio import Audio
+import sqlite3
+from datetime import datetime
 import json
 from collections import defaultdict
 
-# Load the pre-trained speaker diarization pipeline
+#Initialize and configure the app
+server = MLServer(__name__)
 pipeline = Pipeline.from_pretrained("pyannote/speaker-diarization-3.0")
 
-class DiarizationInputs(TypedDict):
-    input_dir: DirectoryInput
-    output_dir: DirectoryInput
+#Database setup
+def init_db():
+    conn = sqlite3.connect('diarization_results.db')
+    c = conn.cursor()
+    c.execute('''CREATE TABLE IF NOT EXISTS diarization_results
+                 (id INTEGER PRIMARY KEY AUTOINCREMENT,
+                  filename TEXT NOT NULL,
+                  speaker TEXT NOT NULL,
+                  start_time REAL NOT NULL,
+                  end_time REAL NOT NULL,
+                  processing_date TEXT NOT NULL)''')
+    conn.commit()
+    conn.close()
 
-class DiarizationParameters(TypedDict):
-    pass  
+def store_results(filename, segments):
+    conn = sqlite3.connect('diarization_results.db')
+    c = conn.cursor()
+    current_time = datetime.now().isoformat()
+    for segment in segments:
+        c.execute('''INSERT INTO diarization_results 
+                    (filename, speaker, start_time, end_time, processing_date)
+                    VALUES (?, ?, ?, ?, ?)''',
+                 (filename, segment["speaker"], segment["start"], 
+                  segment["end"], current_time))
+    conn.commit()
+    conn.close()
 
-# Specifies the input and output directory 
-def create_diarization_task_schema() -> TaskSchema:
-    input_schema = InputSchema(
-        key="input_dir",
-        label="Path to the directory containing audio files",
-        input_type=InputType.DIRECTORY
-    )
-    output_schema = InputSchema(
-        key="output_dir",
-        label="Path to the output directory",
-        input_type=InputType.DIRECTORY
-    )
-    return TaskSchema(
-        inputs=[input_schema, output_schema],
-        parameters=[]
-    )
+#Initialize database
+init_db()
 
-# Formats the output in the JSON
-def format_segments(segments: List[Dict[str, float]]) -> Dict[str, List[str]]:
-    """Format speaker segments into the desired output format."""
-    speaker_segments = defaultdict(list)
+#Audio processing function
+def process_audio_file(file_path: Path):
+    print(f"Processing audio file: {file_path.name}")
+    diarization = pipeline(str(file_path))
+    segments = []
     
+    for turn, _, speaker in diarization.itertracks(yield_label=True):
+        segments.append({
+            "speaker": speaker,
+            "start": turn.start,
+            "end": turn.end
+        })
+
+    store_results(file_path.name, segments)
+    print(f"Saved {len(segments)} segments to database")
+    
+    #JSON
+    output = {file_path.name: format_segments(segments)}
+    with open('diarization_output.json', 'w') as f:
+        json.dump(output, f, indent=4)
+    
+    return segments
+
+def format_segments(segments):
+    speaker_segments = defaultdict(list)
     for segment in segments:
         speaker = segment["speaker"]
         start = f'{segment["start"]:.2f}'
         end = f'{segment["end"]:.2f}'   
-        speaker_segments[speaker].append(f'{start} - {end}')
-    
-    # Convert defaultdict to regular dict and format the output
-    formatted_output = {}
-    for speaker, times in speaker_segments.items():
-        formatted_output[speaker] = "  ".join(times)
-    
-    return formatted_output
-
-# Create a server instance
-server = MLServer(__name__)
-
-server.add_app_metadata(
-    name="Speaker Diarization",
-    author="Christina. Swetha, Nikita",
-    version="1.0",
-    info="app-info.md"
-)
-
-# Checks audio file types
-def is_audio_file(file_path: Path) -> bool:
-    """Check if a file is an audio file based on its extension."""
-    audio_extensions = {".wav", ".mp3", ".flac", ".ogg"}  
-    return file_path.suffix.lower() in audio_extensions
-
-@server.route("/diarize", task_schema_func=create_diarization_task_schema, short_title="Speaker separation and transcription")
-def diarize(inputs: DiarizationInputs, parameters: DiarizationParameters) -> ResponseBody:
-    input_path = Path(inputs["input_dir"].path)
-    output_path = Path(inputs["output_dir"].path)
-    output_path.mkdir(parents=True, exist_ok=True)  # Create output directory if it doesn't exist
-
-    results = {}
-
-    if input_path.is_file():
-        # Process a single file 
-        if is_audio_file(input_path):
-            diarization = pipeline(str(input_path))
-            segments = []
-            for turn, _, speaker in diarization.itertracks(yield_label=True):
-                segments.append({
-                    "speaker": speaker,
-                    "start": turn.start,
-                    "end": turn.end
-                })
-            # Format the segments into the desired output
-            results[input_path.name] = format_segments(segments)
-        else:
-            results[input_path.name] = "Error: Not a valid audio file"
-    else:
-        # Process all audio files in the input directory 
-        for input_file in input_path.glob("*"):
-            if input_file.is_file() and is_audio_file(input_file):
-                diarization = pipeline(str(input_file))
-                segments = []
-                for turn, _, speaker in diarization.itertracks(yield_label=True):
-                    segments.append({
-                        "speaker": speaker,
-                        "start": turn.start,
-                        "end": turn.end
-                    })
-                results[input_file.name] = format_segments(segments)
-
-    # Save results to a JSON file in the specified output directory
-    output_file = output_path / "output.json"
-    with open(output_file, "w") as f:
-        json.dump(results, f, indent=4)
-
-    return ResponseBody(FileResponse(path=str(output_file), file_type="json"))
-
+        speaker_segments[speaker].append(f'{start}-{end}')
+    return {k: " ".join(v) for k, v in speaker_segments.items()}
 if __name__ == "__main__":
-    server.run()
+    # Configure these paths:
+    AUDIO_FILE = Path("input\TOEFL.mp3")  #audio file path
+    OUTPUT_DIR = Path("./output")
+    
+    if not AUDIO_FILE.exists():
+        print(f"Error: Audio file not found at {AUDIO_FILE}")
+    else:
+        OUTPUT_DIR.mkdir(exist_ok=True)
+        segments = process_audio_file(AUDIO_FILE)
+        
+        # Print results to console
+        print("\nSpeaker Diarization Results:")
+        for seg in segments:
+            print(f"{seg['speaker']}: {seg['start']:.2f}s - {seg['end']:.2f}s")
+        
+        print("\nDatabase stored successfully!")
+        print(f" View results with: sqlite3 diarization_results.db 'SELECT * FROM diarization_results;'")
