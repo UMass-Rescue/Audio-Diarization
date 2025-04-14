@@ -92,7 +92,7 @@ Start the Flask-ML server to work with RescueBox for predictions:
 
 ```bash
 
-python app.py
+python transcribe_diarize_app.py
 
 ```
 
@@ -123,21 +123,9 @@ Input directory should have an audio file and an output directory where the json
 
 Results will be displayed
 
-<img  width="735"  alt="diarization_result"  src="https://github.com/user-attachments/assets/566446ca-49e6-41e6-9889-96140476bb6f"  />
-
-  
-
-## Diarization with Transcription
-
-  
-
-The transcription output is not yet integrated with RescueBox. To see the diarized audio transcription we can run the model.py file. The output will be displayed in the terminal!
-
-  
+![image](https://github.com/user-attachments/assets/da0dc54d-b929-4ef0-b808-bfa10e9a87c4)
 
 First make sure ffmpeg is installed on your system, if you don't already have it
-
-  
 
 ### For MacOS  
 
