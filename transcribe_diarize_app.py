@@ -16,10 +16,14 @@ from pyannote.core import Segment
 from pyannote.audio import Audio
 import whisper # Audio trancription
 import json # Outputs into JSON format
-from utils import diarize_text  # Custom helper that aligns Whisper transcription with diarization
+from utils import diarize_text, load_pyannote_pipeline_from_pretrained  # Custom helper that aligns Whisper transcription with diarization
 
 # Load models
-pipeline = Pipeline.from_pretrained("pyannote/speaker-diarization-3.0")
+#pipeline = Pipeline.from_pretrained("pyannote/speaker-diarization-3.0")
+
+#To use local model
+PATH_TO_CONFIG = "./models/pyannote_diarization_config.yaml"
+pipeline = load_pyannote_pipeline_from_pretrained(PATH_TO_CONFIG)
 asr_model = whisper.load_model("medium.en")
 
 class DiarizationInputs(TypedDict):
