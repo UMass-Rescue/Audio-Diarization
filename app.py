@@ -1,7 +1,7 @@
 from typing import TypedDict, Dict, List
 from pathlib import Path
-from flask_ml.flask_ml_server import MLServer, load_file_as_string
-from flask_ml.flask_ml_server.models import (
+from rb.lib.ml_service import MLServer, load_file_as_string
+from rb.api.models import (
     DirectoryInput,
     FileResponse,
     InputSchema,

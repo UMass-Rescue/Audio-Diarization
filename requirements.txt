@@ -4,9 +4,6 @@ onnxruntime==1.21.0
 git+https://github.com/openai/whisper.git 
 ffmpeg-python
 
-# Web Server
-flask-ml==0.2.5
-
 # Pyannote dependencie
 pyannote.core==5.0.0
 pyannote.audio==3.3.2

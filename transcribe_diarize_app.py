@@ -1,7 +1,8 @@
 from typing import TypedDict, Dict
 from pathlib import Path
-from flask_ml.flask_ml_server import MLServer
-from flask_ml.flask_ml_server.models import (
+from rb.api.models import DirectoryInput
+from rb.lib.ml_service import MLService
+from rb.api.models import (
     DirectoryInput,
     FileResponse,
     InputSchema,
@@ -16,7 +17,9 @@ from pyannote.core import Segment
 from pyannote.audio import Audio
 import whisper # Audio trancription
 import json # Outputs into JSON format
-from utils import diarize_text  # Custom helper that aligns Whisper transcription with diarization
+from Audio_Diarization.utils import diarize_text  # Custom helper that aligns Whisper transcription with diarization
+import typer
+from typing import List
 
 # Load models
 pipeline = Pipeline.from_pretrained("pyannote/speaker-diarization-3.0")
@@ -70,15 +73,30 @@ def format_transcription(diarized_result) -> Dict[str, Dict[str, str]]:
     return output
 
 # Server
-server = MLServer(__name__)
-server.add_app_metadata(
+APP_NAME = "Audio-Diarization"
+ml_service = MLService(APP_NAME)
+ml_service.add_app_metadata(
+    plugin_name=APP_NAME,
     name="Speaker Diarization + Transcription",
     author="Christina, Swetha, Nikita",
     version="2.0",
     info="app-info.md"
 )
 
-@server.route("/diarize-transcribe", task_schema_func=create_task_schema, short_title="Speaker Diarization + Transcription")
+#@server.route("/diarize-transcribe", task_schema_func=create_task_schema, short_title="Speaker Diarization + Transcription")
+def cli_parser(arg: str) -> DiarizationInputs:
+    parts = arg.strip().split()
+    if len(parts) != 2:
+        raise typer.BadParameter("Expected two arguments: <input_dir> <output_dir>")
+    return {
+        "input_dir": DirectoryInput(path=parts[0]),
+        "output_dir": DirectoryInput(path=parts[1])
+    }
+
+def param_parser(args):
+    return {}
+
+
 def diarize_and_transcribe(inputs: DiarizationInputs, parameters: DiarizationParameters) -> ResponseBody:
     input_path = Path(inputs["input_dir"].path)
     output_path = Path(inputs["output_dir"].path)
@@ -107,5 +125,16 @@ def diarize_and_transcribe(inputs: DiarizationInputs, parameters: DiarizationPar
 
     return ResponseBody(FileResponse(path=str(output_file), file_type="json"))
 
+ml_service.add_ml_service(
+    rule="/diarize-transcribe",
+    ml_function=diarize_and_transcribe,
+    inputs_cli_parser=typer.Argument(..., parser=cli_parser),
+    parameters_cli_parser=typer.Argument(..., parser=param_parser),
+    short_title="Speaker Diarization + Transcription",
+    order=0,
+    task_schema_func=create_task_schema,
+)
+app = ml_service.app
+
 if __name__ == "__main__":
-    server.run()
+    app()

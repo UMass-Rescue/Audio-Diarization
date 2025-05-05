@@ -1,5 +1,12 @@
+from pathlib import Path
 from pyannote.core import Segment, Annotation, Timeline
+from pyannote.audio import Pipeline
 
+def load_pyannote_pipeline_from_pretrained(path_to_config: str | Path) -> Pipeline:
+    path_to_config = Path(path_to_config)
+    print(f"Loading pyannote pipeline from {path_to_config}...")
+    pipeline = Pipeline.from_pretrained(path_to_config)
+    return pipeline
 
 def get_text_with_timestamp(transcribe_res):
     timestamp_texts = []
