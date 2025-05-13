@@ -15,6 +15,7 @@ import whisper
 import json
 from collections import defaultdict
 from utils import diarize_text, load_pyannote_pipeline_from_pretrained  
+import csv
 
 # Load models 
 #pipeline = Pipeline.from_pretrained("pyannote/speaker-diarization-3.0")
@@ -82,6 +83,32 @@ def format_combined_result(diarized_result) -> Dict[str, Dict[str, str]]:
         output[speaker] = speaker_dict
     return output
 
+def save_as_csv(data: dict, csv_path: Path):
+    with open(csv_path, "w", newline="") as csvfile:
+        writer = csv.writer(csvfile)
+
+        first_item = next(iter(data.values()))
+        if "transcription" in first_item:
+            writer.writerow(["Audio File", "Transcription"])
+            for audio_file, content in data.items():
+                writer.writerow([audio_file, content["transcription"]])
+
+        elif isinstance(first_item, dict) and any(
+            isinstance(v, dict) for v in first_item.values()
+        ):
+            writer.writerow(["Audio File", "Speaker", "Time Range", "Text"])
+
+            for audio_file, speakers in data.items():
+                for speaker, segments in speakers.items():
+                    for time_range, text in segments.items():
+                        writer.writerow([audio_file, speaker, time_range, text])
+        else:
+            writer.writerow(["Audio File", "Speaker", "Time Range"])
+            for audio_file, speakers in data.items():
+                for speaker, segments in speakers.items():
+                    for segment in segments:
+                        writer.writerow([audio_file, speaker, segment])
+
 # Initialize server
 server = MLServer(__name__)
 server.add_app_metadata(
@@ -117,10 +144,9 @@ def diarize_only(inputs: AudioInputs, parameters: AudioParameters) -> ResponseBo
         else:
             results[audio_file.name] = "Error: Not a valid audio file"
 
-    output_file = output_path / "diarize_output.json"
-    with open(output_file, "w") as f:
-        json.dump(results, f, indent=4)
-    return ResponseBody(FileResponse(path=str(output_file), file_type="json"))
+    csv_file = output_path / "diarize_output.csv"
+    save_as_csv(results, csv_file)
+    return ResponseBody(FileResponse(path=str(csv_file), file_type="csv"))
 
 @server.route("/transcribe", order=1, task_schema_func=create_task_schema, short_title="Audio Transcription")
 def transcribe_only(inputs: AudioInputs, parameters: AudioParameters) -> ResponseBody:
@@ -141,10 +167,9 @@ def transcribe_only(inputs: AudioInputs, parameters: AudioParameters) -> Respons
         else:
             results[audio_file.name] = "Error: Not a valid audio file"
 
-    output_file = output_path / "transcribe_output.json"
-    with open(output_file, "w") as f:
-        json.dump(results, f, indent=2)
-    return ResponseBody(FileResponse(path=str(output_file), file_type="json"))
+    csv_file = output_path / "transcribe_output.csv"
+    save_as_csv(results, csv_file)
+    return ResponseBody(FileResponse(path=str(csv_file), file_type="csv"))
 
 @server.route("/diarize-transcribe", order=2, task_schema_func=create_task_schema, short_title="Speaker Diarization + Transcription")
 def diarize_and_transcribe(inputs: AudioInputs, parameters: AudioParameters) -> ResponseBody:
@@ -167,9 +192,8 @@ def diarize_and_transcribe(inputs: AudioInputs, parameters: AudioParameters) -> 
         else:
             results[audio_file.name] = "Error: Not a valid audio file"
 
-    output_file = output_path / "diarize_transcribe_output.json"
-    with open(output_file, "w") as f:
-        json.dump(results, f, indent=2)
-    return ResponseBody(FileResponse(path=str(output_file), file_type="json"))
+    csv_file = output_path / "diarize_and_transcribe_output.csv"
+    save_as_csv(results, csv_file)
+    return ResponseBody(FileResponse(path=str(csv_file), file_type="csv"))
 
 server.run()
