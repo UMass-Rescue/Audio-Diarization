@@ -228,7 +228,8 @@ This process aids child rescue efforts by distinguishing victim and abuser voice
 
 	Click the 'view' button to see the results. Results will be displayed as follows in the results section
 
- 	<img width="1016" alt="image" src="https://github.com/user-attachments/assets/f70adefb-ebf3-4f76-9add-5eab9b008492" />
+ 	<img width="1017" alt="image" src="https://github.com/user-attachments/assets/42ef67b2-a231-435b-a95a-d01ae830c3ab" />
+
 
 
 
