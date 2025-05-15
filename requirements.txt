@@ -1,5 +1,3 @@
-onnxruntime==1.21.0
-
 # Whisper
 git+https://github.com/openai/whisper.git 
 ffmpeg-python
